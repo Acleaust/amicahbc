@@ -18,6 +18,8 @@
   "homepage": "https://github.com/Acleaust/amicahbc#readme",
   "dependencies": {
     "jsonpath": "^1.0.0",
+    "lowdb": "^1.0.0",
+    "node-schedule": "^1.3.0",
     "telebot": "^1.2.5"
   }
 }
