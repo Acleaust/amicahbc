@@ -7,6 +7,7 @@ var jp = require('jsonpath');
 
 //Muuttujat
 const rssurl = "https://www.fazerfoodco.fi/modules/MenuRss/MenuRss/CurrentDay?costNumber=0083&language=fi"
+const rssurlviikko = "https://www.fazerfoodco.fi/modules/MenuRss/MenuRss/CurrentWeek?costNumber=0083&language=fi"
 var fs = require('fs');
 const low = require('lowdb')
 const FileSync = require('lowdb/adapters/FileSync')
@@ -14,9 +15,12 @@ var schedule = require('node-schedule')
 const adapter = new FileSync('data.json')
 const dbjson = low(adapter)
 //Rss parser
-const feedparser = require('feedparser-promised');
-
-var striptags = require('striptags');
+let Parser = require('rss-parser');
+let parser = new Parser({
+    customFields: {
+        item: ['title', 'description'],
+    }
+});
 
 //BotToken
 const bot = new TeleBot('TOKEN');
@@ -83,31 +87,63 @@ bot.on('/stop', (msg) => {
     }
 })
 
-// TESTI
-//Lähettää viestin joka minuutti 
-var j = schedule.scheduleJob('30 * * * * *', function () {
+bot.on('/viikko', (msg) => {
+    (async () => {
 
-    feedparser.parse(rssurl).then((items) => {
-        var rsstitle = jp.query(items, '$..title')
-        var rssdescription = jp.query(items, '$..description')
+        let feed = await parser.parseURL(rssurl);
+        feed.items.forEach(item => {
+            var rssdescription = item.description
+            var rsstitle = item.title
 
-        var rssdescription = rssdescription.replace('<br>', '')
-        console.log(rssdescription)
 
-        var dbjson = JSON.parse(fs.readFileSync('data.json', 'utf8'));
-        var iideet = jp.query(dbjson, '$..id')
 
-        for (i = 0; i < iideet.length; i += 1) {
-            var iidee = iideet[i]
-            bot.sendMessage(iidee, rsstitle + '\nTänään ruokana:\n\n' + rssdescription)
-                .then((response) => {
-                    //Do nothing
-                }).catch((error) => {
-                    console.log('Error:', error);
-                });
-        }
-        return console.log('[info] Ruokalista lähetetty!');
-    }).catch(error => console.error('error: ', error));
+            var brr = /<br>/gi
+            var rssdescription = rssdescription.replace(brr, '')
+
+
+            for (i = 0; i < rsstitle.length; i += 1) {
+                console.log("Foo")
+            }
+
+                bot.sendMessage(msg.from.id, item.title + '\nTänään ruokana:\n\n' + rssdescription)
+                    .then((response) => {
+                        //Do nothing
+                    }).catch((error) => {
+                        console.log('Error:', error);
+                    });
+            }
+        );
+
+    })})
+
+// Lähettää ruokalistan klo 04:00
+var j = schedule.scheduleJob('4 * * *', function () {
+    (async () => {
+
+        let feed = await parser.parseURL(rssurl);
+        feed.items.forEach(item => {
+            var rssdescription = item.description
+
+            var brr = /<br>/gi
+            var rssdescription = rssdescription.replace(brr, '')
+
+            //Hakee data.jsonin
+            var obj = JSON.parse(fs.readFileSync('data.json', 'utf8'));
+            //Ettii data.jsonista kaikki ID:t
+            var iideet = jp.query(obj, '$..id')
+
+            for (i = 0; i < iideet.length; i += 1) {
+                var iidee = iideet[i]
+                bot.sendMessage(iidee, item.title + '\nTänään ruokana:\n\n' + rssdescription)
+                    .then((response) => {
+                        //Do nothing
+                    }).catch((error) => {
+                        console.log('Error:', error);
+                    });
+            }
+        });
+
+    })()
 });
 
 //Ohjelman pyöritys
