@@ -29,6 +29,8 @@ const bot = new TeleBot('TOKEN');
 dbjson.defaults({ users: [] })
     .write()
 
+//Aikaleimat logiin
+require('console-stamp')(console, 'HH:MM:ss'); 
 // Logaa jokaisen sisääntulevan viestin consoliin
 bot.on('text', function (msg) {
     console.log(`[text] ${msg.chat.id} ${msg.text}`);
