@@ -87,37 +87,32 @@ bot.on('/stop', (msg) => {
     }
 })
 
+//Tulostaa koko viikon ruokalistan
 bot.on('/viikko', (msg) => {
-    (async () => {
-
-        let feed = await parser.parseURL(rssurl);
-        feed.items.forEach(item => {
-            var rssdescription = item.description
-            var rsstitle = item.title
-
-
-
-            var brr = /<br>/gi
-            var rssdescription = rssdescription.replace(brr, '')
-
-
-            for (i = 0; i < rsstitle.length; i += 1) {
-                console.log("Foo")
-            }
-
-                bot.sendMessage(msg.from.id, item.title + '\nTänään ruokana:\n\n' + rssdescription)
-                    .then((response) => {
-                        //Do nothing
-                    }).catch((error) => {
-                        console.log('Error:', error);
-                    });
-            }
-        );
-
-    })})
+    console.log("[info] Lähetetään viikon ruokalista!")
+    lahetaviikonruokalista(msg.chat.id)
+})
 
 // Lähettää ruokalistan klo 04:00
-var j = schedule.scheduleJob('4 * * *', function () {
+var j = schedule.scheduleJob('0 4 * * 1-5', function () {
+    console.log("[info] Lähetetään ruokalista!")
+    lahetaruokalista()
+});
+
+// Admin resend
+bot.on('/rs', (msg) => {
+    if (msg.chat.id == 81023943) {
+        lahetaruokalista()
+    } else {
+        //Do nothing
+    }
+})
+
+// Funktionit
+
+//Lähetä
+function lahetaruokalista() {
+
     (async () => {
 
         let feed = await parser.parseURL(rssurl);
@@ -144,7 +139,38 @@ var j = schedule.scheduleJob('4 * * *', function () {
         });
 
     })()
-});
+}
+
+function lahetaviikonruokalista(chatID) {
+
+    (async () => {
+
+        let feed = await parser.parseURL(rssurlviikko);
+        feed.items.forEach(item => {
+            var rssdescription = item.description
+            var rsstitle = item.title
+
+            console.log(rsstitle)
+
+            var brr = /<br>/gi
+            var rssdescription = rssdescription.replace(brr, '')
+
+
+            // for (i = 0; i < rsstitle.length; i += 1) {
+            //     console.log("Foo")
+            //}
+
+            bot.sendMessage(chatID, item.title + '\nTänään ruokana:\n\n' + rssdescription)
+                .then((response) => {
+                    //Do nothing
+                }).catch((error) => {
+                    console.log('Error:', error);
+                });
+        }
+        );
+
+    })
+}
 
 //Ohjelman pyöritys
 bot.start();
