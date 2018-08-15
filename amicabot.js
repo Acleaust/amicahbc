@@ -5,6 +5,18 @@
 const TeleBot = require('telebot');
 var jp = require('jsonpath');
 
+// BOT CONFIG
+const bot = new TeleBot({
+    token: 'TOKEN',
+    usePlugins: ['floodProtection'],
+    pluginConfig: {
+        floodProtection: {
+            interval: 2,
+            message: 'Ota iisisti ja relaa 😤'
+        }
+    }
+});
+
 //Muuttujat
 const rssurl = "https://www.fazerfoodco.fi/modules/MenuRss/MenuRss/CurrentDay?costNumber=0083&language=fi"
 const rssurlviikko = "https://www.fazerfoodco.fi/modules/MenuRss/MenuRss/CurrentWeek?costNumber=0083&language=fi"
@@ -21,9 +33,6 @@ let parser = new Parser({
         item: ['title', 'description'],
     }
 });
-
-//BotToken
-const bot = new TeleBot('TOKEN');
 
 // Set some defaults
 dbjson.defaults({ users: [] })
@@ -88,6 +97,11 @@ bot.on('/stop', (msg) => {
         }
     }
 })
+
+bot.on('/nam', (msg) => {
+    console.log("[info] Nam")
+    return bot.sendMessage(msg.chat.id, `Nam Nam`)
+}) 
 
 //Tulostaa koko viikon ruokalistan
 bot.on('/viikko', (msg) => {
