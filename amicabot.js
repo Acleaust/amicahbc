@@ -11,7 +11,7 @@ const bot = new TeleBot({
     usePlugins: ['floodProtection'],
     pluginConfig: {
         floodProtection: {
-            interval: 2,
+            interval: 1,
             message: 'Ota iisisti ja relaa 😤'
         }
     }
@@ -39,7 +39,7 @@ dbjson.defaults({ users: [] })
     .write()
 
 //Aikaleimat logiin
-require('console-stamp')(console, 'HH:MM:ss'); 
+require('console-stamp')(console, 'HH:MM:ss');
 // Logaa jokaisen sisääntulevan viestin consoliin
 bot.on('text', function (msg) {
     console.log(`[text] ${msg.chat.id} ${msg.text}`);
@@ -62,7 +62,7 @@ bot.on('/start', (msg) => {
         var iidee = iideet[i]
         if (iid == iidee) {
             console.log("Dataa ei tallenneta")
-            return bot.sendMessage(msg.chat.id, `Hei, ${msg.from.first_name}! Saat tästä lähtien päivän safkat suoraan Telegramiin!\n\nVoit lopettaa tilauksen tekemällä /stop.`); //Vastaa kun käyttäjä käyttää /start komentoa
+            return bot.sendMessage(msg.chat.id, `Hei, ${msg.from.first_name}! Saat tästä lähtien päivän safkat suoraan Telegramiin!\nSaat koko viikon ruokalista viestinä tekemällä /viikko\n\nVoit lopettaa tilauksen tekemällä /stop.`); //Vastaa kun käyttäjä käyttää /start komentoa
         } else {
             //älä tee mitää
         }
@@ -100,8 +100,8 @@ bot.on('/stop', (msg) => {
 
 bot.on('/nam', (msg) => {
     console.log("[info] Nam")
-    return bot.sendMessage(msg.chat.id, `Nam Nam`)
-}) 
+    return bot.sendMessage(msg.chat.id, `Nam Nam 😋`)
+})
 
 //Tulostaa koko viikon ruokalistan
 bot.on('/viikko', (msg) => {
@@ -110,7 +110,7 @@ bot.on('/viikko', (msg) => {
 })
 
 // Lähettää ruokalistan klo 04:00
-var j = schedule.scheduleJob('0 4 * * 1-5', function () {
+var j = schedule.scheduleJob('0 4 * * *', function () {
     console.log("[info] Lähetetään ruokalista!")
     lahetaruokalista()
 });
@@ -143,14 +143,18 @@ function lahetaruokalista() {
             //Ettii data.jsonista kaikki ID:t
             var iideet = jp.query(obj, '$..id')
 
-            for (i = 0; i < iideet.length; i += 1) {
-                var iidee = iideet[i]
-                bot.sendMessage(iidee, item.title + '\nTänään ruokana:\n\n' + rssdescription)
-                    .then((response) => {
-                        //Do nothing
-                    }).catch((error) => {
-                        console.log('Error:', error);
-                    });
+            if (rssdescription == "") {
+                //Do nothing
+            } else {
+                for (i = 0; i < iideet.length; i += 1) {
+                    var iidee = iideet[i]
+                    bot.sendMessage(iidee, "<b>"+ item.title + '\nTänään ruokana:</b>\n\n' + rssdescription, {parseMode: 'HTML'})
+                        .then((response) => {
+                            //Do nothing
+                        }).catch((error) => {
+                            console.log('Error:', error);
+                        });
+                }
             }
         });
 
@@ -161,31 +165,50 @@ function lahetaviikonruokalista(chatID) {
 
     (async () => {
 
+        var rssdescriptionit = [];
+        var rsstitlet = [];
+
         let feed = await parser.parseURL(rssurlviikko);
         feed.items.forEach(item => {
+
             var rssdescription = item.description
             var rsstitle = item.title
-
-            console.log(rsstitle)
 
             var brr = /<br>/gi
             var rssdescription = rssdescription.replace(brr, '')
 
+            rsstitlet.push(rsstitle);
+            rssdescriptionit.push(rssdescription)
 
-            // for (i = 0; i < rsstitle.length; i += 1) {
-            //     console.log("Foo")
-            //}
-
-            bot.sendMessage(chatID, item.title + '\nTänään ruokana:\n\n' + rssdescription)
-                .then((response) => {
-                    //Do nothing
-                }).catch((error) => {
-                    console.log('Error:', error);
-                });
         }
         );
 
-    })
+        var rkl = undefined
+
+        for (i = 0; i < rsstitlet.length; i += 1) {
+            rssdesc = rssdescriptionit[i]
+            rsstitl = rsstitlet[i] 
+
+            if (rssdesc == "") {
+                //Do nothing
+            } else {
+                var pr = "<b>"+rsstitl+"</b>" + "\n" + rssdesc+ "\n"
+            }
+
+            if (rkl == null) {
+                rkl = pr
+            } else {
+                rkl = rkl + pr
+            }
+        }
+
+        return bot.sendMessage(chatID, '<b>Viikon ruokalista:</b>\n\n' + rkl, {parseMode: 'HTML'})
+            .then((response) => {
+                //Do nothing
+            }).catch((error) => {
+                console.log('Error:', error);
+            });
+    })()
 }
 
 //Ohjelman pyöritys
