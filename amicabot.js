@@ -200,6 +200,8 @@ function lahetaviikonruokalista(chatID) {
             } else {
                 rkl = rkl + pr
             }
+
+            var pr = "";
         }
 
         return bot.sendMessage(chatID, '<b>Viikon ruokalista:</b>\n\n' + rkl, {parseMode: 'HTML'})
