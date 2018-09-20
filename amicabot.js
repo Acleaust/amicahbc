@@ -103,6 +103,11 @@ bot.on('/nam', (msg) => {
     return bot.sendMessage(msg.chat.id, `Nam Nam 😋`)
 })
 
+bot.on('/hyi', (msg) => {
+    console.log("[info] Hyi")
+    return bot.sendMessage(msg.chat.id, `Hyi Hyi 🤢🤢 Mee töihin nii saat parempaa ruokaa`)
+})
+
 //Tulostaa koko viikon ruokalistan
 bot.on('/viikko', (msg) => {
     console.log("[info] Lähetetään viikon ruokalista!")
