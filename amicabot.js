@@ -5,9 +5,11 @@
 const TeleBot = require('telebot');
 var jp = require('jsonpath');
 
+var token = process.env.token;
+
 // BOT CONFIG
 const bot = new TeleBot({
-    token: 'TOKEN',
+    token: `${token}`,
     usePlugins: ['floodProtection'],
     pluginConfig: {
         floodProtection: {
